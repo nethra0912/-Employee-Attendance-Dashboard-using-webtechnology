@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRINCE HR | Attendance Dashboard</title>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+  
+  :root{
+    --ink:        #10172A;   
+    --ink-soft:   #4B5468;   
+    --bg:         #F3F5F9;   
+    --surface:    #FFFFFF;   
+    --line:       #E3E7EF;   
+    --accent:     #C9962B;  
+    --accent-soft:#FBF2DD;
+
+    --good:       #1B7F5F
+    --good-soft:  #E4F4EE;
+    --avg:        #C97B1E;   
+    --avg-soft:   #FBEEDD;
+    --poor:       #C0392B;   
+    --poor-soft:  #FBE7E4;
+
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(16,23,42,0.04), 0 8px 24px -12px rgba(16,23,42,0.12);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3, .display{ font-family:'Sora', sans-serif; }
+
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+
+  header.brand{
+    background:linear-gradient(135deg, #10172A 0%, #1B2440 100%);
+    color:#fff;
+    padding:28px clamp(20px, 4vw, 56px);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .brand-left{ display:flex; align-items:center; gap:14px; }
+
+  .brand-mark{
+    width:42px; height:42px; border-radius:10px;
+    background:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora', sans-serif; font-weight:800; font-size:18px;
+    color:#10172A;
+    flex-shrink:0;
+  }
+
+  .brand-title{ font-weight:700; font-size:20px; letter-spacing:0.2px; }
+  .brand-sub{ font-size:13px; color:#B9C0D4; margin-top:2px; }
+
+  .brand-date{
+    font-size:13px;
+    color:#B9C0D4;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12);
+    padding:8px 14px;
+    border-radius:999px;
+  }
+
+  main{
+    max-width:1200px;
+    margin:0 auto;
+    padding:clamp(20px, 4vw, 40px) clamp(20px, 4vw, 56px) 64px;
+    display:grid;
+    grid-template-columns: 380px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  
+
+  @media (max-width: 900px){
+    main{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:24px;
+  }
+
+  .card h2{
+    margin:0 0 4px;
+    font-size:17px;
+    font-weight:700;
+  }
+  .card .hint{
+    margin:0 0 20px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    letter-spacing:0.2px;
+  }
+  .field label .req{ color:var(--poor); margin-left:2px; }
+
+  .field input, .field select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#FAFBFC;
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .field input:focus, .field select:focus{
+    outline:none;
+    border-color:var(--accent);
+    background:#fff;
+  }
+  .field input.error, .field select.error{
+    border-color:var(--poor);
+    background:var(--poor-soft);
+  }
+  .field .err-msg{
+    display:none;
+    font-size:11.5px;
+    color:var(--poor);
+    margin-top:5px;
+  }
+  .field.has-error .err-msg{ display:block; }
+
+  .row-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+  button.submit{
+    width:100%;
+    margin-top:6px;
+    padding:12px 16px;
+    border:none;
+    border-radius:9px;
+    background:var(--ink);
+    color:#fff;
+    font-family:'Sora', sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:transform .12s ease, background .15s ease;
+  }
+  button.submit:hover{ background:#1B2440; }
+  button.submit:active{ transform:scale(0.98); }
+
+  #formMsg{
+    margin-top:12px;
+    font-size:12.5px;
+    text-align:center;
+    color:var(--ink-soft);
+    display:none;
+  }
+
+  .table-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .table-wrap{ overflow-x:auto; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:640px;
+  }
+  thead th{
+    text-align:left;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color:var(--ink-soft);
+    font-weight:600;
+    padding:0 12px 10px;
+    border-bottom:1.5px solid var(--line);
+  }
+  tbody td{
+    padding:14px 12px;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr{ transition:background .15s ease; }
+  tbody tr:hover{ background:#FAFBFD; }
+
+  .emp-name{ font-weight:600; }
+  .emp-dept{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+
+  .ring-cell{ display:flex; align-items:center; gap:10px; }
+  .ring{
+    width:40px; height:40px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .ring::before{
+    content:'';
+    width:30px; height:30px;
+    border-radius:50%;
+    background:var(--surface);
+  }
+  .pct-text{ font-weight:600; font-size:14px; }
+
+  .badge{
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.2px;
+  }
+  .badge.excellent, .badge.good{ background:var(--good-soft); color:var(--good); }
+  .badge.average{ background:var(--avg-soft); color:var(--avg); }
+  .badge.poor{ background:var(--poor-soft); color:var(--poor); }
+
+  .empty-state{
+    text-align:center;
+    padding:48px 16px;
+    color:var(--ink-soft);
+    font-size:13.5px;
+  }
+
+  .delete-btn{
+    background:none; border:none; cursor:pointer;
+    color:var(--ink-soft); font-size:13px;
+    padding:4px 8px; border-radius:6px;
+  }
+  .delete-btn:hover{ color:var(--poor); background:var(--poor-soft); }
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <div class="brand-left">
+    <div class="brand-mark">P</div>
+    <div>
+      <div class="brand-title">PRINCE HR</div>
+      <div class="brand-sub">Employee Attendance Dashboard</div>
+    </div>
+  </div>
+  <div class="brand-date mono" id="todayDate"></div>
+</header>
+
+<main>
+
+
+  <section class="card">
+    <h2>Log Attendance</h2>
+    <p class="hint">Enter working details to calculate attendance automatically.</p>
+
+    <form id="attendanceForm" novalidate>
+
+      <div class="row-2">
+        <div class="field" id="fld-id">
+          <label for="empId">Employee ID<span class="req">*</span></label>
+          <input type="text" id="empId" placeholder="101">
+          <div class="err-msg">Employee ID is required</div>
+        </div>
+        <div class="field" id="fld-dept">
+          <label for="dept">Department<span class="req">*</span></label>
+          <select id="dept">
+            <option value="">Select</option>
+            <option>Engineering</option>
+            <option>Sales</option>
+            <option>HR</option>
+            <option>Finance</option>
+            <option>Operations</option>
+          </select>
+          <div class="err-msg">Please select a department</div>
+        </div>
+      </div>
+
+      <div class="field" id="fld-name">
+        <label for="empName">Employee Name<span class="req">*</span></label>
+        <input type="text" id="empName" placeholder="Rahul">
+        <div class="err-msg">Employee name is required</div>
+      </div>
+
+      <div class="row-2">
+        <div class="field" id="fld-working">
+          <label for="workingDays">Working Days<span class="req">*</span></label>
+          <input type="number" id="workingDays" min="1" placeholder="24">
+          <div class="err-msg">Enter valid working days</div>
+        </div>
+        <div class="field" id="fld-present">
+          <label for="presentDays">Present Days<span class="req">*</span></label>
+          <input type="number" id="presentDays" min="0" placeholder="22">
+          <div class="err-msg">Present days can't exceed working days</div>
+        </div>
+      </div>
+
+      <div class="field" id="fld-leave">
+        <label for="leaveDays">Leave Days<span class="req">*</span></label>
+        <input type="number" id="leaveDays" min="0" placeholder="2">
+        <div class="err-msg">Leave days can't exceed working days</div>
+      </div>
+
+      <button type="submit" class="submit">Add Attendance Record</button>
+      <div id="formMsg"></div>
+    </form>
+  </section>
+
+
+  <section class="card">
+    <div class="table-head">
+      <div>
+        <h2 style="margin-bottom:2px;">Attendance Report</h2>
+        <p class="hint" style="margin:0;">Live-calculated percentage and status per employee</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Employee</th>
+            <th>Attendance</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="reportBody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      No attendance records yet — add one using the form.
+    </div>
+  </section>
+
+</main>
+
+<script>
+
+  let records = [
+    { id: 101, name: "Rahul", dept: "Engineering", working: 25, present: 23, leave: 2 },
+    { id: 102, name: "Priya", dept: "Sales",       working: 25, present: 19, leave: 6 }
+  ];
+
+  const form        = document.getElementById('attendanceForm');
+  const reportBody   = document.getElementById('reportBody');
+  const emptyState   = document.getElementById('emptyState');
+  const formMsg      = document.getElementById('formMsg');
+
+  
+  document.getElementById('todayDate').textContent =
+    new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+
+  function getStatus(pct){
+    if (pct >= 90) return { label: 'Excellent', cls: 'excellent', color: 'var(--good)' };
+    if (pct >= 75) return { label: 'Good',      cls: 'good',      color: 'var(--good)' };
+    if (pct >= 50) return { label: 'Average',   cls: 'average',   color: 'var(--avg)'  };
+    return              { label: 'Poor',      cls: 'poor',      color: 'var(--poor)' };
+  }
+
+  function render(){
+    reportBody.innerHTML = '';
+
+    if (records.length === 0){
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    records.forEach((r, idx) => {
+      const pct = Math.round((r.present / r.working) * 100);
+      const status = getStatus(pct);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="mono">#${r.id}</td>
+        <td>
+          <div class="emp-name">${escapeHtml(r.name)}</div>
+          <div class="emp-dept">${escapeHtml(r.dept)}</div>
+        </td>
+        <td>
+          <div class="ring-cell">
+            <div class="ring" style="background:conic-gradient(${status.color} ${pct}%, var(--line) 0)">
+            </div>
+            <span class="pct-text mono">${pct}%</span>
+          </div>
+        </td>
+        <td><span class="badge ${status.cls}">${status.label}</span></td>
+        <td><button class="delete-btn" data-idx="${idx}" title="Remove record">✕</button></td>
+      `;
+      reportBody.appendChild(tr);
+    });
+
+    
+    reportBody.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        records.splice(Number(btn.dataset.idx), 1);
+        render();
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  
+  function setError(fieldId, isError){
+    const el = document.getElementById(fieldId);
+    el.classList.toggle('has-error', isError);
+  }
+
+  function validate(){
+    let valid = true;
+
+    const empId       = document.getElementById('empId').value.trim();
+    const empName      = document.getElementById('empName').value.trim();
+    const dept          = document.getElementById('dept').value;
+    const workingDays   = Number(document.getElementById('workingDays').value);
+    const presentDays   = Number(document.getElementById('presentDays').value);
+    const leaveDays     = Number(document.getElementById('leaveDays').value);
+
+    setError('fld-id', empId === '');
+    if (empId === '') valid = false;
+
+    setError('fld-name', empName === '');
+    if (empName === '') valid = false;
+
+    setError('fld-dept', dept === '');
+    if (dept === '') valid = false;
+
+    const workingInvalid = !document.getElementById('workingDays').value || workingDays <= 0;
+    setError('fld-working', workingInvalid);
+    if (workingInvalid) valid = false;
+
+    const presentMissing = document.getElementById('presentDays').value === '';
+    const presentInvalid = presentMissing || presentDays < 0 || (!workingInvalid && presentDays > workingDays);
+    setError('fld-present', presentInvalid);
+    if (presentInvalid) valid = false;
+
+    const leaveMissing = document.getElementById('leaveDays').value === '';
+    const leaveInvalid = leaveMissing || leaveDays < 0 || (!workingInvalid && leaveDays > workingDays);
+    setError('fld-leave', leaveInvalid);
+    if (leaveInvalid) valid = false;
+
+    return valid ? { id: empId, name: empName, dept, working: workingDays, present: presentDays, leave: leaveDays } : null;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = validate();
+
+    if (!data){
+      formMsg.style.display = 'block';
+      formMsg.style.color = 'var(--poor)';
+      formMsg.textContent = 'Please fix the highlighted fields.';
+      return;
+    }
+
+    records.push(data);
+    render();
+
+    formMsg.style.display = 'block';
+    formMsg.style.color = 'var(--good)';
+    formMsg.textContent = `Record added for ${data.name}.`;
+
+    form.reset();
+    document.querySelectorAll('.field').forEach(f => f.classList.remove('has-error'));
+
+    setTimeout(() => { formMsg.style.display = 'none'; }, 2500);
+  });
+
+  
+  render();
+</script>
+
+</body>
+</html>
